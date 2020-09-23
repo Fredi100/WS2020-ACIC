@@ -1,16 +1,16 @@
-all: server client
+all: exercise1
 
-server: server.o
-	g++ -o server myserver.cpp
+exercise1: main.o customString.o
+	g++ -std=c++11 *.o -o Main
 
-client: client.o
-	g++ -o client myclient.cpp
+main.o: Main.cpp
+	g++ -std=c++11 -c Main.cpp
+	
+customString.o: CustomString.hpp CustomString.cpp
+	g++ -std=c++11 -c CustomString.cpp
 
-server.o: myserver.cpp
-	g++ -std=c++14 -c myserver.cpp
-
-client.o: myclient.cpp
-	g++ -std=c++14 -c myclient.cpp
+run: all
+	./Main
 
 clean:
-	rm -rf *o client server
+	rm -rf *.o *.gch Main
