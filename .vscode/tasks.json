@@ -1,0 +1,50 @@
+{
+    "tasks": [
+        {
+            "label": "Build",
+            "type": "shell",
+            "command": "/usr/bin/g++",
+            "args": [
+                "-o",
+                "Main",
+                "*.o"
+            ],
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "dependsOn": [
+                "Compile"
+            ]
+        },
+        {
+            "label": "Compile",
+            "type": "shell",
+            "command": "/usr/bin/g++",
+            "args": [
+                "-ggdb",
+                "-c",
+                "*.cpp",
+                "*.hpp"
+            ],
+            "problemMatcher": [
+                "$gcc"
+            ]
+        },
+        {
+            "label": "Clean",
+            "type": "shell",
+            "command": "rm",
+            "args": [
+                "-rfv",
+                "*.o",
+                "*.gch",
+                "Main"
+            ]
+        }
+    ],
+    "version": "2.0.0"
+}
