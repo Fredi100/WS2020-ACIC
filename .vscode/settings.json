@@ -8,6 +8,8 @@
         "streambuf": "cpp",
         "array": "cpp",
         "initializer_list": "cpp",
-        "utility": "cpp"
+        "utility": "cpp",
+        "ostream": "cpp",
+        "iostream": "cpp"
     }
 }
