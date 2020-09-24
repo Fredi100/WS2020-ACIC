@@ -5,6 +5,7 @@
             "type": "shell",
             "command": "/usr/bin/g++",
             "args": [
+                "-fsanitize=leak",
                 "-o",
                 "Main",
                 "*.o"
@@ -26,6 +27,7 @@
             "command": "/usr/bin/g++",
             "args": [
                 "-ggdb",
+                "-fsanitize=leak",
                 "-c",
                 "*.cpp",
                 "*.hpp"

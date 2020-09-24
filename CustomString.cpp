@@ -13,31 +13,44 @@ const unsigned int arrLen(const char *string)
 }
 
 /**
- * Creates a new CustomString object by creating a new char array and copying the content of the given initString.
+ * Creates a new CustomString object by creating a new char array on the heap and copying the content of the given initString.
  */
 CustomString::CustomString(const char *initString) : size(arrLen(initString))
 {
     /*
-    Create a new char array on the heap.
-    Otherwise the array is not accessible outside of this function's scope
+    data needs to be created on the heap,
+    otherweise the array is not accessible outside of this function's scope.
     */
-    this->data = new char[size+1]; // Increase size by one to accomodate null terminator
+    data = new char[size + 1];
 
-    // Copying content from one array to the others
+    /*
+    Copying content from initString into data value by value instead of just passing a reference to the array.
+    This is to prevent any changes from outside to change the value of data.
+    */
     for (unsigned int i = 0; i < size; i++)
-        this->data[i] = initString[i];
+        data[i] = initString[i];
 
-    this->data[size] = '\0';
+    data[size] = '\0';
+}
+
+/**
+ * Because data was created on the heap, it needs to be manually deleted. Otherwise we would get a memory leak
+ */
+CustomString::~CustomString()
+{
+    delete[] data;
 }
 
 /**
  * Creates a new CustomString object by first taking the content of the old String,
  * copying it into a new char array and then appending the content of the other CustomString.
  */
-CustomString* CustomString::Concatenate(CustomString *other)
+CustomString *CustomString::Concatenate(CustomString *other)
 {
-    // concatString needs to be one char longer than both strings combined to accomodate the null terminator
-    char *concatString = new char[this->GetLength() + other->GetLength() + 1];
+    /*
+    Creating concatString on the stack, as it is only relevant for the scope of this function.
+    */
+    char concatString[this->GetLength() + other->GetLength() + 1];
 
     /*
     Iterate through the old array and copy the content into the new array
