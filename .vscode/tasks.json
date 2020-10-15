@@ -7,7 +7,7 @@
             "args": [
                 "-fsanitize=leak",
                 "-o",
-                "Main",
+                "emsenhuber",
                 "*.o"
             ],
             "problemMatcher": [
@@ -44,7 +44,7 @@
                 "-rfv",
                 "*.o",
                 "*.gch",
-                "Main"
+                "emsenhuber"
             ]
         }
     ],
