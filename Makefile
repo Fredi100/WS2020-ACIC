@@ -1,16 +1,13 @@
 all: exercise1
 
-exercise1: main.o customString.o
-	g++ -std=c++11 *.o -o Main
+exercise1: emsenhuber.o
+	g++ -std=c++11 *.o -o emsenhuber
 
-main.o: Main.cpp
-	g++ -std=c++11 -c Main.cpp
-	
-customString.o: CustomString.hpp CustomString.cpp
-	g++ -std=c++11 -c CustomString.cpp
+main.o: emsenhuber.cpp
+	g++ -std=c++11 -c emsenhuber.cpp
 
 run: all
-	./Main
+	./emsenhuber
 
 clean:
-	rm -rf *.o *.gch Main
+	rm -rf *.o *.gch emsenhuber

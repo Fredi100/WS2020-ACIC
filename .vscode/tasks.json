@@ -29,8 +29,7 @@
                 "-ggdb",
                 "-fsanitize=leak",
                 "-c",
-                "*.cpp",
-                "*.hpp"
+                "*.cpp"
             ],
             "problemMatcher": [
                 "$gcc"
@@ -43,7 +42,6 @@
             "args": [
                 "-rfv",
                 "*.o",
-                "*.gch",
                 "emsenhuber"
             ]
         }
