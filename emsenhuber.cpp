@@ -44,6 +44,42 @@ public:
         data[size] = '\0';
     } // Only takes const char array to prevent changing the given data
 
+    /*
+     * Copy constructor creates a new object from the given one being identical to the content but still being two completely seperate objects in the end
+     */
+    CustomString(const CustomString &obj) : CustomString(obj.data) {} // just taking the content of the given object and calling a fitting constructor for it
+
+    /*
+     * Copy assign operator changes the data of the given object instead of replacing it
+     */
+    /*
+    CustomString &operator=(const CustomString other)
+    {
+        if (&other != this) // Checking for self-assignment, skipping unnecessary calls if possible
+        {
+            delete[] data;               // Delete old data array from heap
+            data = new char[other.size]; // Create new char array on heap for new size
+            for (unsigned int i = 0; i < other.size; i++)
+            { // Fill array with data from other object
+                data[i] = other.data[i];
+            }
+            data[other.size + 1] = '\0'; // Don't forget to terminate the string
+        }
+
+        return *this;
+    }
+    */
+
+    CustomString &operator=(const CustomString other)
+    {
+        if (&other != this)
+        {
+            this->~CustomString();
+            new (this) CustomString(other);
+        }
+        return *this;
+    }
+
     /**
      * Because data was created on the heap, it needs to be manually deleted. Otherwise we would get a memory leak
      */
@@ -106,14 +142,24 @@ int main(int argc, char const *argv[])
 
     // This should not be done as the previous string3 is no more accessible afterwards which leads to a memory leak
     //string3 = string3->Concatenate(string1);
-    CustomString *string4 = string3->Concatenate(string1);
+    CustomString *stringConcat = string3->Concatenate(string1);
 
-    std::cout << "Str3: " << string4->c_str() << std::endl;
+    std::cout << "StrConcat: " << stringConcat->c_str() << std::endl;
+
+    CustomString *stringCopy = new CustomString(*stringConcat);
+
+    std::cout << "StrCopy: " << stringCopy->c_str() << std::endl;
+
+    /* Copy Assign Operator */
+    std::cout << "Testing Copy Assign Operator..." << std::endl;
+    //string1 = string2;
+    std::cout << "String1: " << string1->c_str() << std::endl;
 
     delete string1;
     delete string2;
     delete string3;
-    delete string4;
+    delete stringConcat;
+    delete stringCopy;
 
     return 0;
 }
