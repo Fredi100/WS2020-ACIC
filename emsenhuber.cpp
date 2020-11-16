@@ -60,7 +60,7 @@ public:
         if (&other != this) // Checking for self-assignment, skipping unnecessary calls if possible
         {
             delete[] data;               // Delete old data array from heap
-            data = new char[other.size]; // Create new char array on heap for new size
+            data = new char[other.size+1]; // Create new char array on heap for new size
             for (unsigned int i = 0; i < other.size; i++) { // Fill array with data from other object
                 data[i] = other.data[i];
             }
@@ -69,6 +69,44 @@ public:
 
         return *this;
     }
+
+    CustomString& operator+=(const CustomString& other){
+        // Copy content from data in a temp variable
+        char temp[size + 1];
+        for(int i = 0; i < size; i++){
+            temp[i] = data[i];
+        }
+        temp[size + 1] = '\0';
+
+        delete[] data; // Delete old data to replace with new one
+        data = new char[size + other.size + 1];
+
+        // Fill data with new content
+        for(int i = 0; i < size; i++){
+            data[i] = temp[i];
+        }
+        for(int i = 0; i < other.size; i++){
+            data[size+i] = other.data[i];
+        }
+        data[size+other.size+1] = '\0';
+
+        size += other.size;
+
+        return *this;
+    }
+
+    CustomString& operator+=(const char* str){
+        return *this += CustomString(str);
+    }
+
+    CustomString operator+(const CustomString& other){
+        return this->Concatenate(other);
+    }
+
+    CustomString operator+(const char* str){
+        return this->Concatenate(CustomString(str));
+    }
+
 
     /**
      * Because data was created on the heap, it needs to be manually deleted.
@@ -81,7 +119,7 @@ public:
      * String, copying it into a new char array and then appending the content of
      * the other CustomString.
      */
-    CustomString Concatenate(CustomString& other) // Can not be const as method calls would not work
+    CustomString Concatenate(const CustomString& other) // Can not be const as method calls would not work
     {
         /*
         Creating concatString on the stack, as it is only relevant for the scope of
@@ -110,9 +148,9 @@ public:
         return CustomString(concatString);
     }
 
-    const char* c_str() { return data; };
+    const char* c_str() const { return data; };
 
-    const unsigned int GetLength() { return size; };
+    const unsigned int GetLength() const { return size; };
 };
 
 /*#### Tests ####*/
@@ -120,29 +158,29 @@ public:
 static void testConstructor() {
     std::cout << "Testing Constructor..." << std::endl;
     CustomString string1 = CustomString("Foo");
-    std::cout << "String 1: " << string1.c_str() << std::endl;
+    std::cout << "String 1: " << string1.c_str() << " | Should be Foo" << std::endl;
     char data[] = "Bar";
     CustomString string2 = CustomString(data);
     // Testing whether or not any changes to data appear inside of string1
     data[1] = 'I';
-    std::cout << "String 2: " << string2.c_str() << std::endl;
+    std::cout << "String 2: " << string2.c_str() << " | Should be Bar" << std::endl;
 }
 
 static void testCStr() {
     std::cout << "Testing c_str..." << std::endl;
     CustomString string1 = CustomString("Foo");
-    std::cout << "String 1: " << string1.c_str() << std::endl;
+    std::cout << "String 1: " << string1.c_str() << " | Should be Foo" << std::endl;
 }
 
 static void testConcatenate()
 {
-    std::cout << "Testing Concetenate..." << std::endl;
+    std::cout << "Testing Concatenate..." << std::endl;
     CustomString string1 = CustomString("Foo");
     CustomString string2 = CustomString("Bar");
     std::cout << "String 1: " << string1.c_str() << std::endl;
     std::cout << "String 2: " << string2.c_str() << std::endl;
     CustomString stringConcat = string1.Concatenate(string2);
-    std::cout << "String Concatenate: " << stringConcat.c_str() << std::endl;
+    std::cout << "String Concatenate: " << stringConcat.c_str() << " | Should be FooBar" << std::endl;
     // When working with pointers, following should not be done as the previous string2 is no more accessible
     // afterwards which leads to a memory leak
     // string2 = string2->Concatenate(string1);
@@ -151,7 +189,7 @@ static void testConcatenate()
 static void testLength() {
     std::cout << "Testing Length..." << std::endl;
     CustomString string1 = CustomString("Foo");
-    std::cout << "String 1 Lenght: " << string1.GetLength() << " Should be: 3" << std::endl;
+    std::cout << "String 1 Length: " << string1.GetLength() << " | Should be: 3" << std::endl;
 }
 
 static void testCopyConstructor()
@@ -160,7 +198,7 @@ static void testCopyConstructor()
     CustomString string1 = CustomString("Foo");
     CustomString stringCopy = CustomString(string1);
     std::cout << "String 1: " << string1.c_str() << std::endl;
-    std::cout << "String Copy: " << stringCopy.c_str() << std::endl;
+    std::cout << "String Copy: " << stringCopy.c_str() << " | Should be Foo" << std::endl;
 }
 
 static void testCopyAssignOperator()
@@ -171,7 +209,44 @@ static void testCopyAssignOperator()
     std::cout << "String 1 before: " << string1.c_str() << std::endl;
     std::cout << "String 2: " << string2.c_str() << std::endl;
     string1 = string2;
-    std::cout << "String 1 after: " << string1.c_str() << std::endl;
+    std::cout << "String 1 after: " << string1.c_str() << " | Should be Bar" << std::endl;
+}
+
+static void testAddEquals1Operator(){
+    std::cout << "Testing Add Equals Operator 1..." << std::endl;
+    CustomString string1 = CustomString("Foo");
+    CustomString string2 = CustomString("Bar");
+    std::cout << "String 1: " << string1.c_str() << std::endl;
+    std::cout << "String 2: " << string2.c_str() << std::endl;
+    string1 += string2;
+    std::cout << "String 1 Add: " << string1.c_str() << " | Should be FooBar" << std::endl;
+}
+
+static void testAddEquals2Operator(){
+    std::cout << "Testing Add Equals Operator 2..." << std::endl;
+    CustomString string1 = CustomString("Foo");
+    std::cout << "String 1: " << string1.c_str() << std::endl;
+    string1 += (const char*) "Bar";
+    std::cout << "String 1 Add: " << string1.c_str() << " | Should be FooBar" << std::endl;
+}
+
+static void testAddOperator1(){
+    std::cout << "Testing Add Operator 1..." << std::endl;
+    CustomString string1 = CustomString("Foo");
+    CustomString string2 = CustomString("Bar");
+    CustomString stringAdd = string1 + string2;
+    std::cout << "String 1: " << string1.c_str() << std::endl;
+    std::cout << "String 2: " << string2.c_str() << std::endl;
+    std::cout << "String Add: " << stringAdd.c_str() << " | Should be FooBar" << std::endl;
+}
+
+static void testAddOperator2(){
+    std::cout << "Testing Add Operator 2..." << std::endl;
+    CustomString string1 = CustomString("Foo");
+    CustomString stringAdd = string1 + (const char*) "Bar";
+    std::cout << "String 1: " << string1.c_str() << std::endl;
+    std::cout << "String 2: Bar" << std::endl;
+    std::cout << "String Add: " << stringAdd.c_str() << " | Should be FooBar" << std::endl;
 }
 
 /* Main */
@@ -184,6 +259,10 @@ int main(int argc, char const* argv[])
     testLength();
     testCopyConstructor();
     testCopyAssignOperator();
+    testAddEquals1Operator();
+    testAddEquals2Operator();
+    testAddOperator1();
+    testAddOperator2();
 
     return 0;
 }
