@@ -95,16 +95,16 @@ public:
         return *this;
     }
 
-    CustomString& operator+=(const char* str){
-        return *this += CustomString(str);
+    CustomString& operator+=(const char* str){  // Just calling the above implementation for a const char
+        return *this += CustomString(str);      // Not really necessary as the compiler is able to implicitly convert const char* into CustomString
     }
 
-    CustomString operator+(const CustomString& other){
+    CustomString operator+(const CustomString& other){ // Using Concatenate to get the extended string and just return it
         return this->Concatenate(other);
     }
 
-    CustomString operator+(const char* str){
-        return this->Concatenate(CustomString(str));
+    CustomString operator+(const char* str){ // Same with the above one just for const char*
+        return this->Concatenate(CustomString(str)); // This overload is not really necessary as the compiler is able to implicitly cast every const char* in a CustomString
     }
 
 
@@ -146,6 +146,14 @@ public:
         concatString[this->GetLength() + other.GetLength()] = '\0';
 
         return CustomString(concatString);
+    }
+
+    operator const char*() const{ // Just providing a way to cast CustomString into const char*
+        return data;
+    }
+
+    operator int() const{ // Same with the above one but for ints
+        return size;
     }
 
     const char* c_str() const { return data; };
@@ -249,6 +257,17 @@ static void testAddOperator2(){
     std::cout << "String Add: " << stringAdd.c_str() << " | Should be FooBar" << std::endl;
 }
 
+static void testConversionFunctionString(){
+    std::cout << "Testing Conversion Function String..." << std::endl;
+    CustomString string = CustomString("Foo");
+    puts(string);
+}
+
+static void testConversionFunctionInt(){
+    std::cout << "Testing Conversion Function Int..." << std::endl;
+    CustomString string = CustomString("Foo");
+    std::cout << "String Size: " << (int) string << " | Should be 3" << std::endl;
+}
 /* Main */
 
 int main(int argc, char const* argv[])
@@ -263,6 +282,8 @@ int main(int argc, char const* argv[])
     testAddEquals2Operator();
     testAddOperator1();
     testAddOperator2();
+    testConversionFunctionString();
+    testConversionFunctionInt();
 
     return 0;
 }
