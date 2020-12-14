@@ -1,9 +1,6 @@
-#pragma once
-
 #include <iostream>
 
-class CustomString
-{
+class CustomString {
 private:
     char* data;
 
@@ -23,6 +20,44 @@ private:
     }
 
 public:
+    class Iterator {
+    private:
+        const char* pos;
+
+    public:
+        Iterator(const char* pos) {
+            this->pos = pos;
+        }
+
+        Iterator& operator++() {
+            this->pos++;
+            return *this;
+        }
+
+        /*
+         * Post Increment returns the old value before incrementing it.
+         * Therefore copying the old one is necessary before incrementing this
+         */
+        Iterator operator++(int) {
+            Iterator old = Iterator(this->pos);
+            this->pos++;
+            return old;
+        }
+
+        char operator*() {
+            return *this->pos; // Incrementing iterator just means incrementing the position of the pointer is has
+        }
+
+        bool operator==(const Iterator& other) const{
+            return this->pos == other.pos; // Comparing both pointers in order to determing if both iterators are the same
+        }
+
+        bool operator!=(const Iterator& other) const{
+            return !(*this == other); // Inverse of == operator
+        }
+    };
+
+
     /**
      * Creates a new CustomString object by creating a new char array on the heap
      * and copying the content of the given initString.
@@ -60,7 +95,7 @@ public:
         if (&other != this) // Checking for self-assignment, skipping unnecessary calls if possible
         {
             delete[] data;               // Delete old data array from heap
-            data = new char[other.size+1]; // Create new char array on heap for new size
+            data = new char[other.size + 1]; // Create new char array on heap for new size
             for (unsigned int i = 0; i < other.size; i++) { // Fill array with data from other object
                 data[i] = other.data[i];
             }
@@ -70,10 +105,10 @@ public:
         return *this;
     }
 
-    CustomString& operator+=(const CustomString& other){
+    CustomString& operator+=(const CustomString& other) {
         // Copy content from data in a temp variable
         char temp[size + 1];
-        for(int i = 0; i < size; i++){
+        for (int i = 0; i < size; i++) {
             temp[i] = data[i];
         }
         temp[size + 1] = '\0';
@@ -82,28 +117,28 @@ public:
         data = new char[size + other.size + 1];
 
         // Fill data with new content
-        for(int i = 0; i < size; i++){
+        for (int i = 0; i < size; i++) {
             data[i] = temp[i];
         }
-        for(int i = 0; i < other.size; i++){
-            data[size+i] = other.data[i];
+        for (int i = 0; i < other.size; i++) {
+            data[size + i] = other.data[i];
         }
-        data[size+other.size+1] = '\0';
+        data[size + other.size + 1] = '\0';
 
         size += other.size;
 
         return *this;
     }
 
-    CustomString& operator+=(const char* str){  // Just calling the above implementation for a const char
+    CustomString& operator+=(const char* str) {  // Just calling the above implementation for a const char
         return *this += CustomString(str);      // Not really necessary as the compiler is able to implicitly convert const char* into CustomString
     }
 
-    CustomString operator+(const CustomString& other){ // Using Concatenate to get the extended string and just return it
+    CustomString operator+(const CustomString& other) { // Using Concatenate to get the extended string and just return it
         return this->Concatenate(other);
     }
 
-    CustomString operator+(const char* str){ // Same with the above one just for const char*
+    CustomString operator+(const char* str) { // Same with the above one just for const char*
         return this->Concatenate(CustomString(str)); // This overload is not really necessary as the compiler is able to implicitly cast every const char* in a CustomString
     }
 
@@ -148,17 +183,28 @@ public:
         return CustomString(concatString);
     }
 
-    operator const char*() const{ // Just providing a way to cast CustomString into const char*
+    operator const char* () const { // Just providing a way to cast CustomString into const char*
         return data;
     }
 
-    operator int() const{ // Same with the above one but for ints
+    operator int() const { // Same with the above one but for ints
         return size;
     }
 
     const char* c_str() const { return data; };
 
     const unsigned int GetLength() const { return size; };
+
+
+
+    Iterator begin() {
+        return Iterator(&data[0]); // TODO Check if new is necessary
+
+    }
+
+    Iterator end() {
+        return Iterator(&data[size]); // TODO Check if size is the correct value. Might need to be one higher
+    }
 };
 
 /*#### Tests ####*/
@@ -220,7 +266,7 @@ static void testCopyAssignOperator()
     std::cout << "String 1 after: " << string1.c_str() << " | Should be Bar" << std::endl;
 }
 
-static void testAddEquals1Operator(){
+static void testAddEquals1Operator() {
     std::cout << "Testing Add Equals Operator 1..." << std::endl;
     CustomString string1 = CustomString("Foo");
     CustomString string2 = CustomString("Bar");
@@ -230,15 +276,15 @@ static void testAddEquals1Operator(){
     std::cout << "String 1 Add: " << string1.c_str() << " | Should be FooBar" << std::endl;
 }
 
-static void testAddEquals2Operator(){
+static void testAddEquals2Operator() {
     std::cout << "Testing Add Equals Operator 2..." << std::endl;
     CustomString string1 = CustomString("Foo");
     std::cout << "String 1: " << string1.c_str() << std::endl;
-    string1 += (const char*) "Bar";
+    string1 += (const char*)"Bar";
     std::cout << "String 1 Add: " << string1.c_str() << " | Should be FooBar" << std::endl;
 }
 
-static void testAddOperator1(){
+static void testAddOperator1() {
     std::cout << "Testing Add Operator 1..." << std::endl;
     CustomString string1 = CustomString("Foo");
     CustomString string2 = CustomString("Bar");
@@ -248,26 +294,43 @@ static void testAddOperator1(){
     std::cout << "String Add: " << stringAdd.c_str() << " | Should be FooBar" << std::endl;
 }
 
-static void testAddOperator2(){
+static void testAddOperator2() {
     std::cout << "Testing Add Operator 2..." << std::endl;
     CustomString string1 = CustomString("Foo");
-    CustomString stringAdd = string1 + (const char*) "Bar";
+    CustomString stringAdd = string1 + (const char*)"Bar";
     std::cout << "String 1: " << string1.c_str() << std::endl;
     std::cout << "String 2: Bar" << std::endl;
     std::cout << "String Add: " << stringAdd.c_str() << " | Should be FooBar" << std::endl;
 }
 
-static void testConversionFunctionString(){
+static void testConversionFunctionString() {
     std::cout << "Testing Conversion Function String..." << std::endl;
     CustomString string = CustomString("Foo");
     puts(string);
 }
 
-static void testConversionFunctionInt(){
+static void testConversionFunctionInt() {
     std::cout << "Testing Conversion Function Int..." << std::endl;
     CustomString string = CustomString("Foo");
-    std::cout << "String Size: " << (int) string << " | Should be 3" << std::endl;
+    std::cout << "String Size: " << (int)string << " | Should be 3" << std::endl;
 }
+
+static void testIteratorPost() {
+    CustomString string = CustomString("Post Iterator!");
+
+    for (CustomString::Iterator it = string.begin(); it != string.end(); ++it){
+        std::cout << *it << std::endl;
+    }
+}
+
+static void testIteratorPre() {
+    CustomString string = CustomString("Pre Iterator!");
+
+    for (CustomString::Iterator it = string.begin(); it != string.end(); it++){
+        std::cout << *it << std::endl;
+    }
+}
+
 /* Main */
 
 int main(int argc, char const* argv[])
@@ -284,6 +347,8 @@ int main(int argc, char const* argv[])
     testAddOperator2();
     testConversionFunctionString();
     testConversionFunctionInt();
+    testIteratorPost();
+    testIteratorPre();
 
     return 0;
 }
