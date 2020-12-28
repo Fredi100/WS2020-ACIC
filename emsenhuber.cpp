@@ -1,4 +1,4 @@
-#include <iostream>
+#include <assert.h>
 
 class CustomString {
 private:
@@ -144,6 +144,18 @@ public:
         return this->Concatenate(CustomString(str)); // This overload is not really necessary as the compiler is able to implicitly cast every const char* in a CustomString
     }
 
+    bool operator==(const CustomString& other) const{
+        if(size != other.size) return false;
+        for(int i = 0; i < size; i++){
+            if(data[i] != other.data[i]) return false;
+        }
+        return true;
+    }
+
+    bool operator==(const char* str) const{
+        return this->operator==(CustomString(str));
+    }
+
 
     /**
      * Because data was created on the heap, it needs to be manually deleted.
@@ -200,7 +212,6 @@ public:
     const unsigned int GetLength() const { return size; };
 
 
-
     Iterator begin() {
         return Iterator(&data[0]); // TODO Check if new is necessary
 
@@ -213,125 +224,103 @@ public:
 
 /*#### Tests ####*/
 
-static void testConstructor() {
-    std::cout << "Testing Constructor..." << std::endl;
+static void testConstructor1() {
     CustomString string1 = CustomString("Foo");
-    std::cout << "String 1: " << string1.c_str() << " | Should be Foo" << std::endl;
+    assert(string1 == CustomString("Foo"));   
+}
+
+static void testConstructor2(){
     char data[] = "Bar";
-    CustomString string2 = CustomString(data);
+    CustomString string1 = CustomString(data);
     // Testing whether or not any changes to data appear inside of string1
     data[1] = 'I';
-    std::cout << "String 2: " << string2.c_str() << " | Should be Bar" << std::endl;
+    assert(string1 == CustomString("Bar"));
 }
 
-static void testCStr() {
-    std::cout << "Testing c_str..." << std::endl;
-    CustomString string1 = CustomString("Foo");
-    std::cout << "String 1: " << string1.c_str() << " | Should be Foo" << std::endl;
-}
-
-static void testConcatenate()
-{
-    std::cout << "Testing Concatenate..." << std::endl;
+static void testConcatenate(){
     CustomString string1 = CustomString("Foo");
     CustomString string2 = CustomString("Bar");
-    std::cout << "String 1: " << string1.c_str() << std::endl;
-    std::cout << "String 2: " << string2.c_str() << std::endl;
     CustomString stringConcat = string1.Concatenate(string2);
-    std::cout << "String Concatenate: " << stringConcat.c_str() << " | Should be FooBar" << std::endl;
+    assert(stringConcat == CustomString("FooBar"));
     // When working with pointers, following should not be done as the previous string2 is no more accessible
     // afterwards which leads to a memory leak
     // string2 = string2->Concatenate(string1);
 }
 
 static void testLength() {
-    std::cout << "Testing Length..." << std::endl;
     CustomString string1 = CustomString("Foo");
-    std::cout << "String 1 Length: " << string1.GetLength() << " | Should be: 3" << std::endl;
+    assert(string1.GetLength() == 3);
 }
 
-static void testCopyConstructor()
-{
-    std::cout << "Testing Copy Constructor..." << std::endl;
+static void testCopyConstructor() {
     CustomString string1 = CustomString("Foo");
     CustomString stringCopy = CustomString(string1);
-    std::cout << "String 1: " << string1.c_str() << std::endl;
-    std::cout << "String Copy: " << stringCopy.c_str() << " | Should be Foo" << std::endl;
+    assert(string1 == stringCopy);
 }
 
-static void testCopyAssignOperator()
-{
-    std::cout << "Testing Copy Assign Operator..." << std::endl;
+static void testCopyAssignOperator() {
     CustomString string1 = CustomString("Foo");
     CustomString string2 = CustomString("Bar");
-    std::cout << "String 1 before: " << string1.c_str() << std::endl;
-    std::cout << "String 2: " << string2.c_str() << std::endl;
     string1 = string2;
-    std::cout << "String 1 after: " << string1.c_str() << " | Should be Bar" << std::endl;
+    assert(string1 == string2);
 }
 
 static void testAddEquals1Operator() {
-    std::cout << "Testing Add Equals Operator 1..." << std::endl;
     CustomString string1 = CustomString("Foo");
     CustomString string2 = CustomString("Bar");
-    std::cout << "String 1: " << string1.c_str() << std::endl;
-    std::cout << "String 2: " << string2.c_str() << std::endl;
     string1 += string2;
-    std::cout << "String 1 Add: " << string1.c_str() << " | Should be FooBar" << std::endl;
+    assert(string1 == CustomString("FooBar"));
 }
 
 static void testAddEquals2Operator() {
-    std::cout << "Testing Add Equals Operator 2..." << std::endl;
     CustomString string1 = CustomString("Foo");
-    std::cout << "String 1: " << string1.c_str() << std::endl;
     string1 += (const char*)"Bar";
-    std::cout << "String 1 Add: " << string1.c_str() << " | Should be FooBar" << std::endl;
+    assert(string1 == CustomString("FooBar"));
 }
 
 static void testAddOperator1() {
-    std::cout << "Testing Add Operator 1..." << std::endl;
     CustomString string1 = CustomString("Foo");
     CustomString string2 = CustomString("Bar");
     CustomString stringAdd = string1 + string2;
-    std::cout << "String 1: " << string1.c_str() << std::endl;
-    std::cout << "String 2: " << string2.c_str() << std::endl;
-    std::cout << "String Add: " << stringAdd.c_str() << " | Should be FooBar" << std::endl;
+    assert(stringAdd == CustomString("FooBar"));
 }
 
 static void testAddOperator2() {
-    std::cout << "Testing Add Operator 2..." << std::endl;
     CustomString string1 = CustomString("Foo");
     CustomString stringAdd = string1 + (const char*)"Bar";
-    std::cout << "String 1: " << string1.c_str() << std::endl;
-    std::cout << "String 2: Bar" << std::endl;
-    std::cout << "String Add: " << stringAdd.c_str() << " | Should be FooBar" << std::endl;
+    assert(stringAdd == CustomString("FooBar"));
 }
 
 static void testConversionFunctionString() {
-    std::cout << "Testing Conversion Function String..." << std::endl;
     CustomString string = CustomString("Foo");
-    puts(string);
+    const char* test = string;
+    assert(string == CustomString(test));
 }
 
 static void testConversionFunctionInt() {
-    std::cout << "Testing Conversion Function Int..." << std::endl;
     CustomString string = CustomString("Foo");
-    std::cout << "String Size: " << (int)string << " | Should be 3" << std::endl;
+    assert((int)string == 3);
 }
 
 static void testIteratorPost() {
     CustomString string = CustomString("Post Iterator!");
+    const char* data = string.c_str();
+    int i = 0;
 
     for (CustomString::Iterator it = string.begin(); it != string.end(); ++it){
-        std::cout << *it << std::endl;
+        assert(*it == data[i]);
+        i++;
     }
 }
 
 static void testIteratorPre() {
-    CustomString string = CustomString("Pre Iterator!");
+    CustomString string = CustomString("Post Iterator!");
+    const char* data = string.c_str();
+    int i = 0;
 
     for (CustomString::Iterator it = string.begin(); it != string.end(); it++){
-        std::cout << *it << std::endl;
+        assert(*it == data[i]);
+        i++;
     }
 }
 
@@ -339,8 +328,8 @@ static void testIteratorPre() {
 
 int main(int argc, char const* argv[])
 {
-    testConstructor();
-    testCStr();
+    testConstructor1();
+    testConstructor2();
     testConcatenate();
     testLength();
     testCopyConstructor();
