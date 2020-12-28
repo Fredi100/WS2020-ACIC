@@ -106,26 +106,28 @@ public:
     }
 
     CustomString& operator+=(const CustomString& other) {
-        // Copy content from data in a temp variable
-        char temp[size + 1];
-        for (int i = 0; i < size; i++) {
-            temp[i] = data[i];
-        }
-        temp[size + 1] = '\0';
+        // Create new array for combined strings
+        char* newData = new char[size + other.size + 1];
 
-        delete[] data; // Delete old data to replace with new one
-        data = new char[size + other.size + 1];
-
-        // Fill data with new content
-        for (int i = 0; i < size; i++) {
-            data[i] = temp[i];
+        // Copy content from old data into newData
+        for(int i = 0; i < size; i++){
+            newData[i] = data[i];
         }
-        for (int i = 0; i < other.size; i++) {
-            data[size + i] = other.data[i];
-        }
-        data[size + other.size + 1] = '\0';
 
+        // Copy content from other data into newData
+        for(int i = 0; i < other.size; i++){
+            newData[size + 1] = other.data[i];
+        }
+
+        // Terminate newData
+        newData[size + other.size + 1] = '\0';
+        
+        // Increase size
         size += other.size;
+
+        // Delete old data to replace with new one
+        delete[] data;
+        data = newData;
 
         return *this;
     }
