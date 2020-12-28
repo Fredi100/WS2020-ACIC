@@ -116,7 +116,7 @@ public:
 
         // Copy content from other data into newData
         for(int i = 0; i < other.size; i++){
-            newData[size + 1] = other.data[i];
+            newData[size + i] = other.data[i];
         }
 
         // Terminate newData
@@ -162,25 +162,25 @@ public:
         Creating concatString on the stack, as it is only relevant for the scope of
         this function.
         */
-        unsigned int otherLength = other.GetLength();
+        unsigned int otherLength = other.size;
 
-        char concatString[this->GetLength() + other.GetLength() + 1];
+        char concatString[this->size + other.size + 1];
 
         /*
         Iterate through the old array and copy the content into the new array
         */
-        for (unsigned int i = 0; i < this->GetLength(); i++)
+        for (unsigned int i = 0; i < this->size; i++)
             concatString[i] = this->data[i];
 
         /*
         Iterate through the other array and copy the content into the new array
         shifted by the size of the old content
         */
-        for (unsigned int i = 0; i < other.GetLength(); i++)
-            concatString[this->GetLength() + i] = other.c_str()[i];
+        for (unsigned int i = 0; i < other.size; i++)
+            concatString[this->size + i] = other.data[i];
 
         // Lastly insert a null terminator to signify the end of this string
-        concatString[this->GetLength() + other.GetLength()] = '\0';
+        concatString[this->size + other.size] = '\0';
 
         return CustomString(concatString);
     }
