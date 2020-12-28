@@ -159,30 +159,32 @@ public:
     CustomString Concatenate(const CustomString& other) // Can not be const as method calls would not work
     {
         /*
-        Creating concatString on the stack, as it is only relevant for the scope of
-        this function.
+        Would prefer creating concatString on the stack, as it is only relevant for the scope of
+        this function. But MSVC does not allow creating arrays with variable length on the stack.
+        Therefore it is necessary to create the char array on the heap
         */
-        unsigned int otherLength = other.size;
-
-        char concatString[this->size + other.size + 1];
+        char* concatString = new char[size + other.size + 1];
 
         /*
         Iterate through the old array and copy the content into the new array
         */
-        for (unsigned int i = 0; i < this->size; i++)
-            concatString[i] = this->data[i];
+        for (unsigned int i = 0; i < size; i++)
+            concatString[i] = data[i];
 
         /*
         Iterate through the other array and copy the content into the new array
         shifted by the size of the old content
         */
         for (unsigned int i = 0; i < other.size; i++)
-            concatString[this->size + i] = other.data[i];
+            concatString[size + i] = other.data[i];
 
         // Lastly insert a null terminator to signify the end of this string
-        concatString[this->size + other.size] = '\0';
+        concatString[size + other.size] = '\0';
 
-        return CustomString(concatString);
+        CustomString newCustomString = CustomString(concatString);
+        delete[] concatString;
+
+        return newCustomString;
     }
 
     operator const char* () const { // Just providing a way to cast CustomString into const char*
