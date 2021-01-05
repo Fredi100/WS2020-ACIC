@@ -1,4 +1,8 @@
 #include <assert.h>
+#include <iostream>
+#include <memory>
+#include <functional>
+
 
 class CustomString {
 private:
@@ -20,6 +24,14 @@ private:
     }
 
 public:
+
+    struct Deleter {
+        void operator()(CustomString* ptr) {
+            std::cout << "Deleting CustomString" << std::endl;
+            delete ptr;
+        }
+    };
+
     class Iterator {
     private:
         const char* pos;
@@ -48,15 +60,14 @@ public:
             return *this->pos; // Incrementing iterator just means incrementing the position of the pointer is has
         }
 
-        bool operator==(const Iterator& other) const{
+        bool operator==(const Iterator& other) const {
             return this->pos == other.pos; // Comparing both pointers in order to determing if both iterators are the same
         }
 
-        bool operator!=(const Iterator& other) const{
+        bool operator!=(const Iterator& other) const {
             return !(*this == other); // Inverse of == operator
         }
     };
-
 
     /**
      * Creates a new CustomString object by creating a new char array on the heap
@@ -110,18 +121,18 @@ public:
         char* newData = new char[size + other.size + 1];
 
         // Copy content from old data into newData
-        for(int i = 0; i < size; i++){
+        for (int i = 0; i < size; i++) {
             newData[i] = data[i];
         }
 
         // Copy content from other data into newData
-        for(int i = 0; i < other.size; i++){
+        for (int i = 0; i < other.size; i++) {
             newData[size + i] = other.data[i];
         }
 
         // Terminate newData
         newData[size + other.size + 1] = '\0';
-        
+
         // Increase size
         size += other.size;
 
@@ -144,15 +155,15 @@ public:
         return this->Concatenate(CustomString(str)); // This overload is not really necessary as the compiler is able to implicitly cast every const char* in a CustomString
     }
 
-    bool operator==(const CustomString& other) const{
-        if(size != other.size) return false;
-        for(int i = 0; i < size; i++){
-            if(data[i] != other.data[i]) return false;
+    bool operator==(const CustomString& other) const {
+        if (size != other.size) return false;
+        for (int i = 0; i < size; i++) {
+            if (data[i] != other.data[i]) return false;
         }
         return true;
     }
 
-    bool operator==(const char* str) const{
+    bool operator==(const char* str) const {
         return this->operator==(CustomString(str));
     }
 
@@ -222,14 +233,90 @@ public:
     }
 };
 
-/*#### Tests ####*/
+template <class T, class D = std::default_delete<T>>
+class UniquePtr {
+private:
+    T* obj;
+    D del;
+public:
 
-static void testConstructor1() {
+    UniquePtr() { };
+
+    UniquePtr(T* object) : obj(object) { }
+
+    UniquePtr(T* object, const D& deleter) : obj(object), del(deleter) { }
+
+    // Move Constructor
+    // Implemented (6) as defined in http://www.cplusplus.com/reference/memory/unique_ptr/unique_ptr/
+    UniquePtr(UniquePtr&& other) : UniquePtr(other.Release()) { }
+
+    // Copy Constructor marked as a deleted function in order to prevent copying
+    // Deleted (9) as defined in http://www.cplusplus.com/reference/memory/unique_ptr/unique_ptr/
+    UniquePtr(const UniquePtr& other) = delete;
+
+    ~UniquePtr() {
+        Reset();
+    }
+
+    // Move Assignment operator
+    // Implemented as defined in http://www.cplusplus.com/reference/memory/unique_ptr/operator=/
+    UniquePtr& operator=(UniquePtr&& other) {
+        Reset(other.Release());
+        return *this;
+    }
+
+    // Copy Assignment operator marked as deleted function in order to prevent copying
+    // Deleted (4) as defined in http://www.cplusplus.com/reference/memory/unique_ptr/operator=/
+    UniquePtr& operator=(const UniquePtr&) = delete;
+
+    T* operator->() const {
+        return obj;
+    }
+
+    T operator*() const {
+        return *obj;
+    }
+
+    // Returns true if the UniquePtr is currently managing an object and false if not
+    explicit operator bool() const {
+        return obj != nullptr;
+    }
+
+    // Returns the currently managed object and stops managing it by setting the pointer to null
+    T* Release() {
+        T* temp = Get();
+        this->obj = nullptr;
+        return temp;
+    }
+
+    // Deletes the currently managed object and replaces it with other
+    void Reset(T* other = nullptr) {
+        std::swap(other, obj); // Swapping both pointers so no temp pointer is needed
+        if(other != nullptr)
+            del(other);
+    }
+
+    void Swap(UniquePtr& other) {
+        T* temp = obj;
+        obj = other.obj;
+        other.obj = temp;
+    }
+
+    T* Get() {
+        return obj;
+    }
+};
+
+/*#### Tests ####*/
+/* String Tests */
+static void testConstructor1() { // Tests the regular CustomString Constructor
+    std::cout << "Testing CustomString Constructor1..." << std::endl;
     CustomString string1 = CustomString("Foo");
-    assert(string1 == CustomString("Foo"));   
+    assert(string1 == CustomString("Foo"));
 }
 
-static void testConstructor2(){
+static void testConstructor2() { // Test whether or not it is possible to edit the data inside a CustromString when keeping the reference to the original char[]
+    std::cout << "Testing CustomString Constructor2..." << std::endl;
     char data[] = "Bar";
     CustomString string1 = CustomString(data);
     // Testing whether or not any changes to data appear inside of string1
@@ -237,7 +324,8 @@ static void testConstructor2(){
     assert(string1 == CustomString("Bar"));
 }
 
-static void testConcatenate(){
+static void testConcatenate() {
+    std::cout << "Testing CustomString Concetenate..." << std::endl;
     CustomString string1 = CustomString("Foo");
     CustomString string2 = CustomString("Bar");
     CustomString stringConcat = string1.Concatenate(string2);
@@ -248,17 +336,20 @@ static void testConcatenate(){
 }
 
 static void testLength() {
+    std::cout << "Testing CustomString GetLength..." << std::endl;
     CustomString string1 = CustomString("Foo");
     assert(string1.GetLength() == 3);
 }
 
 static void testCopyConstructor() {
+    std::cout << "Testing CustomString Copy Constructor..." << std::endl;
     CustomString string1 = CustomString("Foo");
     CustomString stringCopy = CustomString(string1);
     assert(string1 == stringCopy);
 }
 
 static void testCopyAssignOperator() {
+    std::cout << "Testing CustomString Copy Assign Operator..." << std::endl;
     CustomString string1 = CustomString("Foo");
     CustomString string2 = CustomString("Bar");
     string1 = string2;
@@ -266,6 +357,7 @@ static void testCopyAssignOperator() {
 }
 
 static void testAddEquals1Operator() {
+    std::cout << "Testing CustomString Add Equals Operator with two CustomStrings..." << std::endl;
     CustomString string1 = CustomString("Foo");
     CustomString string2 = CustomString("Bar");
     string1 += string2;
@@ -273,12 +365,14 @@ static void testAddEquals1Operator() {
 }
 
 static void testAddEquals2Operator() {
+    std::cout << "Testing CustomString Add Equals Operator with one CustomString and one char array..." << std::endl;
     CustomString string1 = CustomString("Foo");
     string1 += (const char*)"Bar";
     assert(string1 == CustomString("FooBar"));
 }
 
 static void testAddOperator1() {
+    std::cout << "Testing CustomString Add Operator with two CustomStrings..." << std::endl;
     CustomString string1 = CustomString("Foo");
     CustomString string2 = CustomString("Bar");
     CustomString stringAdd = string1 + string2;
@@ -286,48 +380,127 @@ static void testAddOperator1() {
 }
 
 static void testAddOperator2() {
+    std::cout << "Testing CustomString Add Operator with one CustomString and one char array..." << std::endl;
     CustomString string1 = CustomString("Foo");
     CustomString stringAdd = string1 + (const char*)"Bar";
     assert(stringAdd == CustomString("FooBar"));
 }
 
 static void testConversionFunctionString() {
+    std::cout << "Testing CustomString Char Array Conversion..." << std::endl;
     CustomString string = CustomString("Foo");
     const char* test = string;
     assert(string == CustomString(test));
 }
 
 static void testConversionFunctionInt() {
+    std::cout << "Testing CustomString Int Conversion..." << std::endl;
     CustomString string = CustomString("Foo");
     assert((int)string == 3);
 }
 
+/* Iterator Tests */
 static void testIteratorPost() {
+    std::cout << "Testing CustomString Post Iterator..." << std::endl;
     CustomString string = CustomString("Post Iterator!");
     const char* data = string.c_str();
     int i = 0;
 
-    for (CustomString::Iterator it = string.begin(); it != string.end(); ++it){
+    for (CustomString::Iterator it = string.begin(); it != string.end(); ++it) {
         assert(*it == data[i]);
         i++;
     }
 }
 
 static void testIteratorPre() {
+    std::cout << "Testing CustomString Pre Iterator..." << std::endl;
     CustomString string = CustomString("Post Iterator!");
     const char* data = string.c_str();
     int i = 0;
 
-    for (CustomString::Iterator it = string.begin(); it != string.end(); it++){
+    for (CustomString::Iterator it = string.begin(); it != string.end(); it++) {
         assert(*it == data[i]);
         i++;
     }
 }
 
+/* Unique Pointer Tests */
+static void testPointerAsterisk() {
+    std::cout << "Testing CustomPointer Asterisk Operator..." << std::endl;
+    UniquePtr<CustomString> pointer(new CustomString("Foo"));
+    assert((*pointer) == "Foo");
+}
+
+static void testPointerArrow() {
+    std::cout << "Testing CustomPointer Arrow Operator..." << std::endl;
+    UniquePtr<CustomString> pointer(new CustomString("Foo"));
+    assert(pointer->GetLength() == 3);
+}
+
+static void testPointerBool() {
+    std::cout << "Testing CustomPointer Bool Conversion..." << std::endl;
+    UniquePtr<CustomString> correct(new CustomString("Foo"));
+    assert(correct);
+    UniquePtr<CustomString> wrong;
+    assert(!wrong);
+}
+
+static void testPointerMoveConstructor() {
+    std::cout << "Testing CustomPointer Move Constructor..." << std::endl;
+    UniquePtr<CustomString> pointer(new CustomString("Foo"));
+    UniquePtr<CustomString> movePointer(std::move(pointer));
+
+    assert(!pointer);
+    assert((*movePointer) == "Foo");
+}
+
+static void testPointerMoverAssignOperator(){
+    std::cout << "Testing CustomPointer Move Assign Operator..." << std::endl;
+    UniquePtr<CustomString> pointer(new CustomString("Foo"));
+    UniquePtr<CustomString> movePointer = std::move(pointer);
+
+    assert(!pointer);
+    assert((*movePointer) == "Foo");
+}
+
+static void testPointerResetEmpty(){
+    std::cout << "Testing CustomPointer Reset with no Parameter..." << std::endl;
+    UniquePtr<CustomString> pointer(new CustomString("Foo"));
+    pointer.Reset();
+
+    assert(!pointer);
+}
+
+static void testPointerResetFilled(){
+    std::cout << "Testing CustomPointer Reset with Parameter..." << std::endl;
+    UniquePtr<CustomString> pointer(new CustomString("Foo"));
+    pointer.Reset(new CustomString("Bar"));
+
+    assert((*pointer) == "Bar");
+}
+
+static void testPointerSwap(){
+    std::cout << "Testing CustomPointer Swap..." << std::endl;
+    UniquePtr<CustomString> pointer1(new CustomString("Foo"));
+    UniquePtr<CustomString> pointer2(new CustomString("Bar"));
+
+    pointer1.Swap(pointer2);
+
+    assert((*pointer1) = "Bar");
+    assert((*pointer2) = "Foo");
+}
+
+static void testPointerDeleter() {
+    std::cout << "Testing CustomPointer Deleter..." << std::endl;
+    UniquePtr<CustomString, CustomString::Deleter> pointer(new CustomString("Foo"));
+}
+
+
 /* Main */
 
-int main(int argc, char const* argv[])
-{
+int main(int argc, char const* argv[]) {
+
+    // String Tests
     testConstructor1();
     testConstructor2();
     testConcatenate();
@@ -340,8 +513,21 @@ int main(int argc, char const* argv[])
     testAddOperator2();
     testConversionFunctionString();
     testConversionFunctionInt();
+
+    // Iterator Tests
     testIteratorPost();
     testIteratorPre();
 
+    // Pointer Tests
+    
+    testPointerAsterisk();
+    testPointerArrow();
+    testPointerBool();
+    testPointerMoveConstructor();
+    testPointerMoverAssignOperator();
+    testPointerResetEmpty();
+    testPointerResetFilled();
+    testPointerSwap();
+    testPointerDeleter();
     return 0;
 }
