@@ -279,7 +279,7 @@ public:
 
     // Returns true if the UniquePtr is currently managing an object and false if not
     explicit operator bool() const {
-        return obj != nullptr;
+        return (this->obj != nullptr);
     }
 
     // Returns the currently managed object and stops managing it by setting the pointer to null
